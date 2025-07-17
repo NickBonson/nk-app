@@ -15,9 +15,20 @@ window.customElements.define(
     <style>
       :host {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-        display: block;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
         width: 100%;
         height: 100%;
+        background: linear-gradient(135deg, #6e8efb, #a777e3);
+        color: #fff;
+        animation: fadeIn 0.8s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
       }
       h1, h2, h3, h4, h5 {
         text-transform: uppercase;
@@ -32,9 +43,16 @@ window.customElements.define(
         border-radius: 3px;
         text-decoration: none;
         cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .button:hover {
+        transform: scale(1.05);
       }
       main {
         padding: 15px;
+        max-width: 480px;
+        text-align: center;
       }
       main hr { height: 1px; background-color: #eee; border: 0; }
       main h1 {
@@ -49,20 +67,26 @@ window.customElements.define(
         font-size: 0.9em;
       }
       main p {
-        color: #333;
+        color: #f1f1f1;
       }
       main pre {
         white-space: pre-line;
+      }
+
+      .logo {
+        width: 150px;
+        margin-bottom: 20px;
       }
     </style>
     <div>
       <capacitor-welcome-titlebar>
         <h1>Capacitor</h1>
       </capacitor-welcome-titlebar>
-      <main>
-        <p>
-          Capacitor makes it easy to build powerful apps for the app stores, mobile web (Progressive Web Apps), and desktop, all
-          with a single code base.
+        <main>
+          <img src="./assets/imgs/logo.png" class="logo" alt="Logo">
+          <p>
+            Capacitor makes it easy to build powerful apps for the app stores, mobile web (Progressive Web Apps), and desktop, all
+            with a single code base.
         </p>
         <h2>Getting Started</h2>
         <p>
@@ -123,14 +147,14 @@ window.customElements.define(
       :host {
         position: relative;
         display: block;
-        padding: 15px 15px 15px 15px;
+        padding: 20px;
         text-align: center;
-        background-color: #73B5F6;
+        background-color: transparent;
       }
       ::slotted(h1) {
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-        font-size: 0.9em;
+        font-size: 1.2em;
         font-weight: 600;
         color: #fff;
       }
