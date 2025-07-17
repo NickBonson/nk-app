@@ -1,5 +1,6 @@
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Camera } from '@capacitor/camera';
+import { registerWithPasskey } from './passkey.js';
 
 window.customElements.define(
   'capacitor-welcome',
@@ -106,6 +107,9 @@ window.customElements.define(
           <button class="button" id="take-photo">Take Photo</button>
         </p>
         <p>
+          <button class="button" id="test-passkey">Test Passkey</button>
+        </p>
+        <p>
           <img id="image" style="max-width: 100%">
         </p>
       </main>
@@ -130,6 +134,21 @@ window.customElements.define(
           image.src = photo.webPath;
         } catch (e) {
           console.warn('User cancelled', e);
+        }
+      });
+
+      self.shadowRoot.querySelector('#test-passkey').addEventListener('click', async function (e) {
+        try {
+          const result = await registerWithPasskey({
+            challenge: 'test-challenge',
+            userId: '1',
+            userName: 'Test User',
+            rpId: 'example.com',
+            rpName: 'Example'
+          });
+          console.log('Passkey result', result);
+        } catch (e) {
+          console.warn('Passkey error', e);
         }
       });
     }
