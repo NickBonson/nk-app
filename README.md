@@ -13,7 +13,7 @@ npm start
 
 ### Passkey Plugin
 
-The project includes a Capacitor plugin that wraps the Android Credential Manager API to support passkey based registration and login.
+The project includes a Capacitor plugin that uses the Google FIDO2 API to handle passkey based registration and login on Android.
 
 #### JavaScript usage
 
