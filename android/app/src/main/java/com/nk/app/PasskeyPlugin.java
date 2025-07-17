@@ -137,7 +137,19 @@ public class PasskeyPlugin extends Plugin {
 
         private void handleCredential(Credential credential) {
             JSObject ret = new JSObject();
-            ret.put("id", credential.getId());
+
+            // getId() was introduced in newer versions of the Credentials
+            // library. Use reflection so older versions can still compile.
+            try {
+                Method m = credential.getClass().getMethod("getId");
+                Object obj = m.invoke(credential);
+                if (obj instanceof CharSequence) {
+                    ret.put("id", obj.toString());
+                }
+            } catch (Exception ignored) {
+                // Ignore if getId() isn't available
+            }
+
             ret.put("data", credential.getData().toString());
             call.resolve(ret);
         }
