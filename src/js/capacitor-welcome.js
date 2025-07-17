@@ -109,6 +109,7 @@ window.customElements.define(
         <p>
           <button class="button" id="test-passkey">Test Passkey</button>
         </p>
+        <p id="passkey-result"></p>
         <p>
           <img id="image" style="max-width: 100%">
         </p>
@@ -147,8 +148,16 @@ window.customElements.define(
             rpName: 'Example'
           });
           console.log('Passkey result', result);
+          const output = self.shadowRoot.querySelector('#passkey-result');
+          if (output) {
+            output.textContent = `Passkey result: ${JSON.stringify(result)}`;
+          }
         } catch (e) {
           console.warn('Passkey error', e);
+          const output = self.shadowRoot.querySelector('#passkey-result');
+          if (output) {
+            output.textContent = `Passkey error: ${e}`;
+          }
         }
       });
     }
