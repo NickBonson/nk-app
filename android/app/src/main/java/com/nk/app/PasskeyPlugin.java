@@ -11,6 +11,7 @@ import androidx.credentials.exceptions.GetCredentialException;
 import androidx.credentials.GetCredentialRequest;
 import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.GetPublicKeyCredentialOption;
+import java.lang.reflect.Method;
 import androidx.core.os.HandlerCompat;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -108,12 +109,30 @@ public class PasskeyPlugin extends Plugin {
         @Override
         public void onResult(R response) {
             if (response instanceof CreateCredentialResponse) {
-                handleCredential(((CreateCredentialResponse) response).getCredential());
+                Credential credential = extractCredential((CreateCredentialResponse) response);
+                if (credential != null) {
+                    handleCredential(credential);
+                } else {
+                    call.reject("Unable to extract credential");
+                }
             } else if (response instanceof GetCredentialResponse) {
                 handleCredential(((GetCredentialResponse) response).getCredential());
             } else {
                 call.reject("Unknown response");
             }
+        }
+
+        private Credential extractCredential(CreateCredentialResponse response) {
+            try {
+                Method m = response.getClass().getMethod("getCredential");
+                Object obj = m.invoke(response);
+                if (obj instanceof Credential) {
+                    return (Credential) obj;
+                }
+            } catch (Exception ignored) {
+                // The method may not exist on older library versions
+            }
+            return null;
         }
 
         private void handleCredential(Credential credential) {
