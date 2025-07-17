@@ -23,7 +23,7 @@ import org.json.JSONObject;
 @CapacitorPlugin(name = "Passkey")
 public class PasskeyPlugin extends Plugin {
     private CredentialManager credentialManager;
-    private final Executor executor = HandlerCompat.createAsync(Looper.getMainLooper());
+    private final Executor executor = HandlerCompat.createAsync(Looper.getMainLooper())::post;
 
     @Override
     public void load() {
