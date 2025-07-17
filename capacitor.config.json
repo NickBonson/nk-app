@@ -1,0 +1,10 @@
+{
+  "appId": "com.nk.app",
+  "appName": "nk",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false
+    }
+  }
+}
