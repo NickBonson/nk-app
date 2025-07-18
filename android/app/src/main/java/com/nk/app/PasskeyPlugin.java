@@ -9,6 +9,9 @@ import androidx.credentials.CredentialManagerCallback;
 import androidx.credentials.GetCredentialRequest;
 import androidx.credentials.GetPublicKeyCredentialOption;
 import androidx.credentials.PublicKeyCredential;
+import androidx.credentials.CreateCredentialResponse;
+import androidx.credentials.CreatePublicKeyCredentialResponse;
+import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.exceptions.CreateCredentialException;
 import androidx.credentials.exceptions.GetCredentialException;
 
@@ -62,10 +65,10 @@ public class PasskeyPlugin extends Plugin {
                     request,
                     null,
                     getActivity().getMainExecutor(),
-                    new CredentialManagerCallback<Credential, CreateCredentialException>() {
+                    new CredentialManagerCallback<CreateCredentialResponse, CreateCredentialException>() {
                         @Override
-                        public void onResult(Credential credential) {
-                            PublicKeyCredential pk = (PublicKeyCredential) credential;
+                        public void onResult(CreateCredentialResponse result) {
+                            CreatePublicKeyCredentialResponse pk = (CreatePublicKeyCredentialResponse) result;
                             JSObject ret = new JSObject();
                             ret.put("responseJson", pk.getRegistrationResponseJson());
                             call.resolve(ret);
@@ -106,14 +109,14 @@ public class PasskeyPlugin extends Plugin {
 
             CredentialManager credentialManager = CredentialManager.create(getContext());
             credentialManager.getCredentialAsync(
-                    request,
                     getActivity(),
+                    request,
                     null,
                     getActivity().getMainExecutor(),
-                    new CredentialManagerCallback<Credential, GetCredentialException>() {
+                    new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
                         @Override
-                        public void onResult(Credential credential) {
-                            PublicKeyCredential pk = (PublicKeyCredential) credential;
+                        public void onResult(GetCredentialResponse result) {
+                            PublicKeyCredential pk = (PublicKeyCredential) result.getCredential();
                             JSObject ret = new JSObject();
                             ret.put("responseJson", pk.getAuthenticationResponseJson());
                             call.resolve(ret);
