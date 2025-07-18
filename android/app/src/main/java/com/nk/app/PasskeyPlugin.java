@@ -1,18 +1,16 @@
 package com.nk.app;
 
-import android.app.Activity;
 import android.os.Build;
 
+import androidx.credentials.CreatePublicKeyCredentialRequest;
 import androidx.credentials.CredentialManager;
 import androidx.credentials.Credential;
 import androidx.credentials.CredentialManagerCallback;
-import androidx.credentials.CreateCredentialRequest;
 import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetPublicKeyCredentialOption;
+import androidx.credentials.PublicKeyCredential;
 import androidx.credentials.exceptions.CreateCredentialException;
 import androidx.credentials.exceptions.GetCredentialException;
-import androidx.credentials.webauthentication.CreatePublicKeyCredentialRequest;
-import androidx.credentials.webauthentication.GetPublicKeyCredentialOption;
-import androidx.credentials.webauthentication.PublicKeyCredential;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
