@@ -1,20 +1,18 @@
 package com.nk.app;
 
 import android.app.Activity;
-import android.app.PendingIntent;
-import android.content.Intent;
 import android.os.Build;
 
-import com.google.android.gms.fido.Fido;
-import com.google.android.gms.fido.Fido2ApiClient;
-import com.google.android.gms.fido.fido2.api.common.AuthenticatorAssertionResponse;
-import com.google.android.gms.fido.fido2.api.common.AuthenticatorAttestationResponse;
-import com.google.android.gms.fido.fido2.api.common.AuthenticatorResponse;
-import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialCreationOptions;
-import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialRequestOptions;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.Credential;
+import androidx.credentials.CredentialManagerCallback;
+import androidx.credentials.CreateCredentialRequest;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.exceptions.CreateCredentialException;
+import androidx.credentials.exceptions.GetCredentialException;
+import androidx.credentials.provider.CreatePublicKeyCredentialRequest;
+import androidx.credentials.provider.GetPublicKeyCredentialOption;
+import androidx.credentials.provider.PublicKeyCredential;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -26,10 +24,6 @@ import org.json.JSONObject;
 
 @CapacitorPlugin(name = "Passkey")
 public class PasskeyPlugin extends Plugin {
-    private static final int REGISTER_REQUEST = 10001;
-    private static final int SIGN_REQUEST = 10002;
-
-    private PluginCall savedCall;
 
     @PluginMethod
     public void registerWithPasskey(PluginCall call) {
@@ -61,24 +55,29 @@ public class PasskeyPlugin extends Plugin {
             user.put("name", userName);
             json.put("user", user);
 
-            PublicKeyCredentialCreationOptions options =
-                    PublicKeyCredentialCreationOptions.fromJson(json.toString());
+            CreatePublicKeyCredentialRequest request =
+                    new CreatePublicKeyCredentialRequest(json.toString());
 
-            Fido2ApiClient client = Fido.getFido2ApiClient(getContext());
-            Task<PendingIntent> task = client.getRegisterPendingIntent(options);
-            task.addOnSuccessListener(new OnSuccessListener<PendingIntent>() {
-                @Override
-                public void onSuccess(PendingIntent pendingIntent) {
-                    savedCall = call;
-                    startActivityForResult(call, pendingIntent, REGISTER_REQUEST);
-                }
-            });
-            task.addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(Exception e) {
-                    call.reject(e.getMessage());
-                }
-            });
+            CredentialManager credentialManager = CredentialManager.create(getContext());
+            credentialManager.createCredentialAsync(
+                    getActivity(),
+                    request,
+                    null,
+                    getActivity().getMainExecutor(),
+                    new CredentialManagerCallback<Credential, CreateCredentialException>() {
+                        @Override
+                        public void onResult(Credential credential) {
+                            PublicKeyCredential pk = (PublicKeyCredential) credential;
+                            JSObject ret = new JSObject();
+                            ret.put("responseJson", pk.getRegistrationResponseJson());
+                            call.resolve(ret);
+                        }
+
+                        @Override
+                        public void onError(CreateCredentialException e) {
+                            call.reject(e.getMessage());
+                        }
+                    });
         } catch (Exception ex) {
             call.reject(ex.getMessage());
         }
@@ -103,58 +102,34 @@ public class PasskeyPlugin extends Plugin {
             json.put("challenge", challenge);
             json.put("rpId", rpId);
 
-            PublicKeyCredentialRequestOptions options =
-                    PublicKeyCredentialRequestOptions.fromJson(json.toString());
+            GetCredentialRequest request = new GetCredentialRequest(
+                    java.util.Collections.singletonList(
+                            new GetPublicKeyCredentialOption(json.toString())));
 
-            Fido2ApiClient client = Fido.getFido2ApiClient(getContext());
-            Task<PendingIntent> task = client.getSignPendingIntent(options);
-            task.addOnSuccessListener(new OnSuccessListener<PendingIntent>() {
-                @Override
-                public void onSuccess(PendingIntent pendingIntent) {
-                    savedCall = call;
-                    startActivityForResult(call, pendingIntent, SIGN_REQUEST);
-                }
-            });
-            task.addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(Exception e) {
-                    call.reject(e.getMessage());
-                }
-            });
+            CredentialManager credentialManager = CredentialManager.create(getContext());
+            credentialManager.getCredentialAsync(
+                    request,
+                    getActivity(),
+                    null,
+                    getActivity().getMainExecutor(),
+                    new CredentialManagerCallback<Credential, GetCredentialException>() {
+                        @Override
+                        public void onResult(Credential credential) {
+                            PublicKeyCredential pk = (PublicKeyCredential) credential;
+                            JSObject ret = new JSObject();
+                            ret.put("responseJson", pk.getAuthenticationResponseJson());
+                            call.resolve(ret);
+                        }
+
+                        @Override
+                        public void onError(GetCredentialException e) {
+                            call.reject(e.getMessage());
+                        }
+                    });
         } catch (Exception ex) {
             call.reject(ex.getMessage());
         }
     }
 
-    @Override
-    protected void handleOnActivityResult(int requestCode, int resultCode, Intent data) {
-        super.handleOnActivityResult(requestCode, resultCode, data);
-        if (savedCall == null) {
-            return;
-        }
-        if (resultCode != Activity.RESULT_OK || data == null) {
-            savedCall.reject("Canceled");
-            savedCall = null;
-            return;
-        }
-
-        try {
-            AuthenticatorResponse response = Fido.getFido2ApiClient(getContext())
-                    .getFido2PendingIntentResponse(data);
-            JSObject ret = new JSObject();
-            if (response instanceof AuthenticatorAttestationResponse) {
-                ret.put("clientDataJSON", ((AuthenticatorAttestationResponse) response).getClientDataJSON());
-                ret.put("attestationObject", ((AuthenticatorAttestationResponse) response).getAttestationObject());
-            } else if (response instanceof AuthenticatorAssertionResponse) {
-                ret.put("clientDataJSON", ((AuthenticatorAssertionResponse) response).getClientDataJSON());
-                ret.put("authenticatorData", ((AuthenticatorAssertionResponse) response).getAuthenticatorData());
-                ret.put("signature", ((AuthenticatorAssertionResponse) response).getSignature());
-                ret.put("userHandle", ((AuthenticatorAssertionResponse) response).getUserHandle());
-            }
-            savedCall.resolve(ret);
-        } catch (Exception e) {
-            savedCall.reject(e.getMessage());
-        }
-        savedCall = null;
-    }
+    // No onActivityResult handling is required when using Credential Manager
 }
